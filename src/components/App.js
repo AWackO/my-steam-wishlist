@@ -8,7 +8,6 @@ import NotFoundCard from "./NotFoundCard";
 import GameCardCurrentlyPlaying from "./GameCardCurrentlyPlaying";
 import GameFilter from "./GameFilter";
 
-let gameList = [];
 let favoriteList = [];
 
 const App = () => {
@@ -20,12 +19,11 @@ const App = () => {
   const isFetching = useRef(false);
   const page = useRef(0);
 
-  const newGameList = [];
-  const searchedGameList = [];
-
-  console.log(currentlyPlaying);
-
   const searchGames = async (name) => {
+    setIsLoading(true);
+    setGames([]);
+    const newGameList = [];
+
     while (isFetching.current) {
       const res = await fetch(`/wishlistdata?p=${page.current}`);
 
@@ -37,13 +35,13 @@ const App = () => {
 
       const data = await res.text();
 
-      gameList = Object.entries(JSON.parse(data));
+      const gameList = Object.entries(JSON.parse(data));
 
       for (let game of gameList) {
         newGameList.push(game[1]);
       }
 
-      if (gameList.length < 2) {
+      if (gameList.length === 0) {
         isFetching.current = false;
       }
     }
@@ -53,22 +51,14 @@ const App = () => {
     isFetching.current = false;
 
     if (searchTerm === "") {
-      setIsLoading(false);
-
-      isFetching.current = true;
       setGames(newGameList);
     } else {
-      newGameList.forEach((element) => {
-        if (element.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-          isFetching.current = true;
-
-          setIsLoading(false);
-
-          searchedGameList.push(element);
-          setGames(searchedGameList);
-        }
-      });
+      setGames(newGameList.filter((element) => element.name.toLowerCase().includes(searchTerm.toLowerCase())));
     }
+
+    isFetching.current = true;
+
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -77,7 +67,7 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const currentlyPlayingGames = JSON.parse(localStorage.getItem("wishlist-currently-playing-games"));
+    const currentlyPlayingGames = JSON.parse(localStorage.getItem("wishlist-currently-playing-games")) || [];
     setCurrentlyPlaying(currentlyPlayingGames);
   }, []);
 
@@ -151,12 +141,10 @@ const App = () => {
           alt="search"
           onClick={() => {
             searchGames(searchTerm);
-            console.log(searchTerm);
           }}
         />
       </div>
       {/* favorites */}
-      {isLoading && <LoadingCard />}
 
       {currentlyPlaying && currentlyPlaying.length > 0 && games && games.length > 0 ? (
         <>
@@ -179,6 +167,8 @@ const App = () => {
             <GameCard key={game.name} game={game} addToCurrPlay={addToCurrentlyPlaying} />
           ))}
         </div>
+      ) : isLoading ? (
+        <LoadingCard />
       ) : (
         <NotFoundCard />
       )}
