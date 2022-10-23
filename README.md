@@ -1,4 +1,4 @@
-# Steam Wishlist Browser and Search Project
+# Steam Wishlist Browser and Search Project in React
 
 The app pulls data from my personal steam wishlist and displays it. Every game card has the name of the game visible and number of reviews. Hovering on the card will also display the release date of the game at the top of the card.
 
